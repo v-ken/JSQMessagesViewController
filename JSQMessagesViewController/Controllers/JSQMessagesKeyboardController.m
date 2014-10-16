@@ -234,7 +234,7 @@ typedef void (^JSQAnimationCompletionBlock)(BOOL finished);
     
     [UIView animateWithDuration:animationDuration
                           delay:0.0
-                        options:animationCurveOption
+                        options:animationCurveOption|UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
                          [self jsq_notifyKeyboardFrameNotificationForFrame:keyboardEndFrameConverted];
                      }

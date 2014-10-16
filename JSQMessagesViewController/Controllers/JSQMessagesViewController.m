@@ -64,6 +64,8 @@ static void * kJSQMessagesKeyValueObservingContext = &kJSQMessagesKeyValueObserv
 
 @property (strong, nonatomic) NSIndexPath *selectedIndexPathForMenu;
 
+@property (assign, nonatomic) BOOL handleKeyboardBecomingVisibleFlag;
+
 - (void)jsq_configureMessagesViewController;
 
 - (NSString *)jsq_currentlyComposedMessageText;
@@ -633,9 +635,9 @@ static void * kJSQMessagesKeyValueObservingContext = &kJSQMessagesKeyValueObserv
     
     [textView becomeFirstResponder];
     
-    if (self.automaticallyScrollsToMostRecentMessage) {
-        [self scrollToBottomAnimated:YES];
-    }
+//    if (self.automaticallyScrollsToMostRecentMessage) {
+//        [self scrollToBottomAnimated:YES];
+//    }
 }
 
 - (void)textViewDidChange:(UITextView *)textView
@@ -654,6 +656,8 @@ static void * kJSQMessagesKeyValueObservingContext = &kJSQMessagesKeyValueObserv
     }
     
     [textView resignFirstResponder];
+    
+    self.handleKeyboardBecomingVisibleFlag = NO;
 }
 
 #pragma mark - Notifications
@@ -730,11 +734,45 @@ static void * kJSQMessagesKeyValueObservingContext = &kJSQMessagesKeyValueObserv
 
 - (void)keyboardController:(JSQMessagesKeyboardController *)keyboardController keyboardDidChangeFrame:(CGRect)keyboardFrame
 {
-    CGFloat heightFromBottom = CGRectGetHeight(self.collectionView.frame) - CGRectGetMinY(keyboardFrame);
+    CGPoint contentOffset = self.collectionView.contentOffset;
+    CGFloat heightFromBottom = CGRectGetHeight(self.view.frame) - CGRectGetMinY(keyboardFrame);
     
     heightFromBottom = MAX(0.0f, heightFromBottom);
     
     [self jsq_setToolbarBottomLayoutGuideConstant:heightFromBottom];
+    
+    // Maintain collection view's content offset when keyboard appears/disappears
+    if (heightFromBottom > 0 &&
+        self.handleKeyboardBecomingVisibleFlag == NO)
+    {
+        
+        if (self.collectionView.contentSize.height < CGRectGetHeight(self.collectionView.frame) - self.collectionView.contentInset.top)
+        {
+            [self scrollToBottomAnimated:NO];
+        }
+        else
+        {
+            contentOffset.y += CGRectGetHeight(keyboardFrame);
+            [self.collectionView setContentOffset:contentOffset];
+        }
+        self.handleKeyboardBecomingVisibleFlag = YES;
+    }
+    else if (heightFromBottom == 0 &&
+             self.handleKeyboardBecomingVisibleFlag == YES)
+    {
+        if (self.collectionView.contentSize.height < CGRectGetHeight(self.collectionView.frame) - self.collectionView.contentInset.top)
+        {
+            [self scrollToBottomAnimated:NO];
+        }
+        else
+        {
+            contentOffset.y -= CGRectGetHeight(keyboardFrame);
+            [self.collectionView setContentOffset:contentOffset];
+        }
+        self.handleKeyboardBecomingVisibleFlag = NO;
+        
+    }
+
 }
 
 - (void)jsq_setToolbarBottomLayoutGuideConstant:(CGFloat)constant
