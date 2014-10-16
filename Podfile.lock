@@ -3,7 +3,7 @@ PODS:
   - OCMock (3.1.1)
 
 DEPENDENCIES:
-  - JSQSystemSoundPlayer
+  - JSQSystemSoundPlayer (~> 2.0.0)
   - OCMock
 
 SPEC CHECKSUMS:
